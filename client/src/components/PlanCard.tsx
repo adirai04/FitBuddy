@@ -5,13 +5,50 @@ import { Dumbbell, Flame, Beef, Download, Copy } from 'lucide-react';
 export const PlanCard: React.FC<{ plan: FitnessPlanResponse }> = ({ plan }) => {
   const handleCopy = () => navigator.clipboard.writeText(JSON.stringify(plan, null, 2));
   
+  // NEW: Formats the JSON plan into a clean, readable text string
+  const formatPlanAsText = (plan: FitnessPlanResponse): string => {
+    let text = `🏋️ FITBUDDY AI FITNESS PLAN 🏋️\n`;
+    text += `===============================\n\n`;
+    
+    text += `📊 NUTRITION TARGETS\n`;
+    text += `Daily Calories: ${plan.caloriesEstimate} kcal\n`;
+    text += `Protein Intake: ${plan.proteinIntake}g\n\n`;
+
+    text += `📅 WEEKLY ROUTINE\n`;
+    text += `-----------------\n`;
+    plan.weeklyRoutine.forEach(day => {
+      text += `[${day.day.toUpperCase()}] - ${day.focus}\n`;
+      if (day.cardio) text += `Cardio: ${day.cardio}\n`;
+      day.exercises.forEach(ex => {
+        text += `  • ${ex.name} | Sets: ${ex.sets} | Reps: ${ex.reps} | Notes: ${ex.notes || 'None'}\n`;
+      });
+      text += `\n`;
+    });
+
+    text += `🧘 REST DAY SUGGESTIONS\n`;
+    text += `-----------------------\n`;
+    plan.restDaySuggestions.forEach(item => text += `• ${item}\n`);
+    text += `\n`;
+
+    text += `🥗 DIET RECOMMENDATIONS\n`;
+    text += `-----------------------\n`;
+    plan.dietRecommendations.forEach(item => text += `• ${item}\n`);
+
+    return text;
+  };
+
+  // UPDATED: Now generates a .txt file using the formatted string
   const handleDownload = () => {
-    const blob = new Blob([JSON.stringify(plan, null, 2)], { type: 'application/json' });
+    const textContent = formatPlanAsText(plan);
+    const blob = new Blob([textContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'FitBuddy-Plan.json';
+    a.download = 'FitBuddy-Plan.txt';
     a.click();
+    
+    // Clean up the URL object after download
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -19,8 +56,8 @@ export const PlanCard: React.FC<{ plan: FitnessPlanResponse }> = ({ plan }) => {
       <div className="flex justify-between items-center bg-slate-900 p-6 rounded-xl border border-slate-800">
         <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Your AI Plan</h2>
         <div className="flex space-x-3">
-          <button onClick={handleCopy} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-md transition"><Copy size={18} /></button>
-          <button onClick={handleDownload} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-md transition"><Download size={18} /></button>
+          <button onClick={handleCopy} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-md transition" title="Copy Raw JSON"><Copy size={18} /></button>
+          <button onClick={handleDownload} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-md transition text-indigo-400" title="Download Text File"><Download size={18} /></button>
         </div>
       </div>
 
